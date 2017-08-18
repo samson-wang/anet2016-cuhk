@@ -6,7 +6,7 @@ from anet_db import Video
 from utils.video_funcs import sliding_window_aggregation_func, default_fusion_func
 import numpy as np
 import time
-import youtube_dl
+#import youtube_dl
 import os
 
 
@@ -61,16 +61,16 @@ class ActionClassifier(object):
         self.__score_name = score_name
 
         # the video downloader
-        self.__video_dl = youtube_dl.YoutubeDL(
-            {
-                'outtmpl': '%(id)s.%(ext)s'
-            }
-        )
+        #self.__video_dl = youtube_dl.YoutubeDL(
+        #    {
+        #        'outtmpl': '%(id)s.%(ext)s'
+        #    }
+        #)
 
         if self.__need_flow:
             self.__flow_extractor = FlowExtractor(dev_id)
 
-    def classify(self, video, model_mask=None):
+    def classify(self, video, model_mask=None, interval=15):
         """
 
         Args:
@@ -83,13 +83,13 @@ class ActionClassifier(object):
         import urlparse
 
         if os.path.isfile(video):
-            return self._classify_from_file(video, model_mask)
+            return self._classify_from_file(video, model_mask, interval=interval)
         elif urlparse.urlparse(video).scheme != "":
             return self._classify_from_url(video, model_mask)
 
         raise ValueError("Unknown input data type")
 
-    def _classify_from_file(self, filename, model_mask):
+    def _classify_from_file(self, filename, model_mask, interval=15):
         """
         Input a file on harddisk
         Args:
@@ -105,7 +105,7 @@ class ActionClassifier(object):
         video_proc.open_video(True)
 
         # here we use interval of 30, roughly 1FPS
-        frm_it = video_proc.frame_iter(timely=False, ignore_err=True, interval=30,
+        frm_it = video_proc.frame_iter(timely=False, ignore_err=True, interval=interval,
                                        length=6 if self.__need_flow else 1,
                                        new_size=(340, 256))
 
@@ -171,7 +171,7 @@ class ActionClassifier(object):
         total_time = all_end - all_start
         print "total time: {} second".format(total_time)
 
-        return final_scores, all_scores, total_time
+        return final_scores, all_scores, total_time, video_proc._frame_count, video_proc._fps
 
     def _classify_from_url(self, url, model_mask):
         """

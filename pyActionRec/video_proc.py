@@ -47,6 +47,7 @@ class VideoProc(object):
             self._vid_cap = vcap
             self._loaded = False
         else:
+            self._fps = vcap.get(cv2.cv.CV_CAP_PROP_FPS)
             cnt = 0
             self._frames = []
             cnt = 0
